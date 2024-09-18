@@ -4,6 +4,11 @@ const router = express.Router();
 const User = require('../models/User'); 
 /* importing bcrypt.js for password hashing */
 var bcrypt = require('bcryptjs');
+/* importing JWT token for adding another layer of authentication - so that server provides correct persons data to the user */
+var jwt = require('jsonwebtoken');
+
+JWT_SECRET='Saim$sMernApp';
+
 
 // ROUTE 1: Create a User using: POST "/api/auth/createuser". No login required
 router.post('/createuser', [
@@ -37,8 +42,15 @@ router.post('/createuser', [
     /* SAVING TO DATABASE */
     await user.save();
 
-    /* CATCHING ERRORS */
-    res.json(user);
+    /* ADDING A JWT TOKEN TO VERIFY AUTHENTICATION */
+    const data = {
+        user:{
+            id: user.id
+        }
+    }
+    const token = jwt.sign(data, JWT_SECRET);
+    res.json({token});
+
   } catch (error) {
     console.error(error.message);
     res.status(500).send("Internal Server Error");
