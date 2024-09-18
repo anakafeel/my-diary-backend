@@ -6,6 +6,9 @@ const app = express()
 const port = 3000
 
 
+/* middle-ware to use request.body */
+app.use(express.json);
+
 /* ALL ROUTES GO HERE : */
 app.use('/api/auth', require('./routes/auth'))
 app.use('/api/auth', require('./routes/notes'))
