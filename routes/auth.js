@@ -26,13 +26,13 @@ router.post('/', [
     user = new User({
       name: req.body.name,
       email: req.body.email,
-      password: req.body.password, // Consider hashing the password before saving
+      password: req.body.password, 
     });
 
     /* SAVING TO DATABASE */
     await user.save();
 
-    // Respond with the new user (you might want to omit the password in the response)
+    
     res.json(user);
   } catch (error) {
     console.error(error.message);
