@@ -6,8 +6,10 @@ const User = require("../models/User");
 var bcrypt = require("bcryptjs");
 /* importing JWT token for adding another layer of authentication - so that server provides correct persons data to the user */
 var jwt = require("jsonwebtoken");
-
 JWT_SECRET = "Saim$sMernApp";
+
+/* importing fetchuser as our middle ware for the login user information */
+var fetchUser = require('../middleware/fetchUser');
 
 // ROUTE 1: Create a User using: POST "/api/auth/createuser". No login required
 router.post(
@@ -101,11 +103,25 @@ router.post(
       };
       const token = jwt.sign(data, JWT_SECRET);
       res.json({ token });
-
-    }catch (error) {
-        console.error(error.message);
-        res.status(500).send("Internal Server Error Occured");
-      }
+    } catch (error) {
+      console.error(error.message);
+      res.status(500).send("Internal Server Error Occured");
+    }
   }
 );
+
+// ROUTE 3: Fetching logged in Users details: POST "/api/auth/getUser". login required
+router.post("/getUser",fetchUser,async (req, res) => {
+
+    try {
+      userId = req.user.id;
+      const user = await User.findById(userId).select("-password");
+      res.send(user);
+    } catch (error) {
+      console.error(error.message);
+      res.status(500).send("Internal Error Occured");
+    }
+  }
+);
+
 module.exports = router;
