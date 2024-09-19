@@ -9,7 +9,7 @@ const Note = require("../models/Note");
 /* Importing the Express Validator to ensure notes which are being added are not empty */
 const { check, validationResult } = require("express-validator");
 
-// ROUTE 1: Get All Note using : GET "/api/auth/fetchallnotes". login required
+// ROUTE 1: Get All Note using : GET "/api/notes/fetchallnotes". login required
 router.get("/fetchallnotes", fetchUser, async (req, res) => {
   try {
     const notes = await Note.find({ user: req.user.id });
@@ -19,7 +19,7 @@ router.get("/fetchallnotes", fetchUser, async (req, res) => {
     res.status(500).send("Internal Server Error Occured");
   }
 });
-// ROUTE 2: Adding a new note using : POST "/api/auth/addnote". login required
+// ROUTE 2: Adding a new note using : POST "/api/notes/addnote". login required
 router.post(
   "/addnote",
   fetchUser,
@@ -55,4 +55,30 @@ router.post(
     }
   }
 );
+
+// ROUTE 2: Update a new note using : Put "/api/notes/updatenote". login required
+router.put(
+    "/updatenote/:id",
+    fetchUser,
+    async (req, res) => {
+        const {title,description,tag} = req.body;
+
+        /* Creating a New Object */
+        const newNote = {};
+        if(title){newNote.title = title};
+        if(description){newNote.description = description};
+        if(tag){newNote.tag = tag};
+
+        /* Find the note to be uopdate and then update it if necessary */
+        /* FIRST CHECKING IF THE NOTE BELEONGS TO THE LOGGED IN USER */
+        let note = await Note.findById(req.params.id);
+        /* If note dosent exist */
+        if(!note){res.status(404).send("Not Found")};
+        if(note.user.toString() !== req.user.id){
+            return res.status(401).send("Not Applicable")
+        }
+
+        note = await Note.findByIdAndUpdate(req.params.id, {$set: newNote}, {new:true})
+        res.json ({note});
+    })
 module.exports = router;
