@@ -1,6 +1,7 @@
 const { check, validationResult } = require("express-validator");
 const express = require("express");
 const router = express.Router();
+/* Importing the Schema Model */
 const User = require("../models/User");
 /* importing bcrypt.js for password hashing */
 var bcrypt = require("bcryptjs");
