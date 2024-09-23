@@ -8,8 +8,11 @@ var bcrypt = require("bcryptjs");
 /* importing JWT token for adding another layer of authentication - so that server provides correct persons data to the user */
 var jwt = require("jsonwebtoken");
 
-/* importing fetchuser as our middle ware for the login user information */
+/* importing fetchuser as our middleware for the login user information */
 var fetchUser = require('../middleware/fetchUser');
+
+// Make sure dotenv is configured at the top of your entry file (index.js)
+require('dotenv').config(); // Load environment variables
 
 // ROUTE 1: Create a User using: POST "/api/auth/createuser". No login required
 router.post(
@@ -30,18 +33,19 @@ router.post(
     }
 
     try {
-      /* CHECKING IF USER ALREADY EXISTS - THROW ERROR*/
+      /* CHECKING IF USER ALREADY EXISTS - THROW ERROR */
       let user = await User.findOne({ email: req.body.email });
       if (user) {
         return res
           .status(400)
-          .json({ success,error: "Sorry, a user with this email already exists" });
+          .json({ success, error: "Sorry, a user with this email already exists" });
       }
 
-      /* ADDING SALT TO HASH PASS , (awaiting bcrypt as it returns a promise) */
+      /* ADDING SALT TO HASH PASSWORD */
       const salt = await bcrypt.genSalt(10);
-      securedPass = await bcrypt.hash(req.body.password, salt);
-      /* CREATE A USER IF THEY DONT EXIST */
+      const securedPass = await bcrypt.hash(req.body.password, salt);
+
+      /* CREATE A USER IF THEY DON'T EXIST */
       user = new User({
         name: req.body.name,
         email: req.body.email,
@@ -51,18 +55,18 @@ router.post(
       /* SAVING TO DATABASE */
       await user.save();
 
-      /* ADDING A JWT TOKEN TO VERIFY AUTHENTICATION - and sending the user their data */
+      /* ADDING A JWT TOKEN TO VERIFY AUTHENTICATION */
       const data = {
         user: {
           id: user.id,
         },
       };
-      const token = jwt.sign(data, JWT_SECRET);
+      const token = jwt.sign(data, process.env.JWT_SECRET); // Use the secret from .env
       success = true;
-      res.json({success, token });
+      res.json({ success, token });
     } catch (error) {
       console.error(error.message);
-      res.status(500).send("Internal Server Error Occured");
+      res.status(500).send("Internal Server Error Occurred");
     }
   }
 );
@@ -75,7 +79,6 @@ router.post(
     check("password", "Password cannot be blank").exists(),
   ],
   async (req, res) => {
-    /* THROWING ERRORS */
     let success = false;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -88,7 +91,7 @@ router.post(
       if (!user) {
         return res
           .status(400)
-          .json({ error: "Please use correct password to login" });
+          .json({ error: "Please use correct credentials to login" });
       }
 
       const passwordCompare = await bcrypt.compare(password, user.password);
@@ -96,37 +99,35 @@ router.post(
         success = false;
         return res
           .status(400)
-          .json({ success, error: "Please use correct password to login" });
+          .json({ success, error: "Please use correct credentials to login" });
       }
 
-      /* ADDING A JWT TOKEN TO VERIFY AUTHENTICATION - and sending the user their data */
+      /* ADDING A JWT TOKEN TO VERIFY AUTHENTICATION */
       const data = {
         user: {
           id: user.id,
         },
       };
-      const token = jwt.sign(data, JWT_SECRET);
+      const token = jwt.sign(data, process.env.JWT_SECRET); // Use the secret from .env
       success = true;
-      res.json({ success,token });
+      res.json({ success, token });
     } catch (error) {
       console.error(error.message);
-      res.status(500).send("Internal Server Error Occured");
+      res.status(500).send("Internal Server Error Occurred");
     }
   }
 );
 
-// ROUTE 3: Fetching logged in Users details: POST "/api/auth/getUser". login required
-router.post("/getUser",fetchUser,async (req, res) => {
-
-    try {
-      userId = req.user.id;
-      const user = await User.findById(userId).select("-password");
-      res.send(user);
-    } catch (error) {
-      console.error(error.message);
-      res.status(500).send("Internal Error Occured");
-    }
+// ROUTE 3: Fetching logged in user's details: POST "/api/auth/getUser". login required
+router.post("/getUser", fetchUser, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findById(userId).select("-password");
+    res.send(user);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("Internal Error Occurred");
   }
-);
+});
 
 module.exports = router;
