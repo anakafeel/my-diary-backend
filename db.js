@@ -1,11 +1,17 @@
-/* connecting with database */
 const mongoose = require('mongoose');
+require('dotenv').config();
 
-
-const mongoURI = "mongodb://localhost:27017/My-Diary"
+console.log(process.env.MONGODB_URI);
+const mongoURI = process.env.MONGODB_URI;
 
 async function connectToMongo() {
-  await mongoose.connect(mongoURI).then(()=> console.log("Connected to Mongo Successfully")).catch(err => console.log(err));
+  try {
+  await mongoose.connect(mongoURI);
+
+    console.log("Connected to MongoDB successfully");
+  } catch (err) {
+    console.error("MongoDB connection error:", err);
+  }
 }
 
-module.exports = connectToMongo
+module.exports = connectToMongo;
