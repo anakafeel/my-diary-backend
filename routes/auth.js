@@ -7,7 +7,6 @@ const User = require("../models/User");
 var bcrypt = require("bcryptjs");
 /* importing JWT token for adding another layer of authentication - so that server provides correct persons data to the user */
 var jwt = require("jsonwebtoken");
-JWT_SECRET = "Saim$sMernApp";
 
 /* importing fetchuser as our middle ware for the login user information */
 var fetchUser = require('../middleware/fetchUser');
